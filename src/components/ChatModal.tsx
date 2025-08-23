@@ -63,7 +63,7 @@ export function ChatModal({ open, onOpenChange }: ChatModalProps) {
 
       const aiMessage: Message = {
         id: Date.now().toString(),
-        text: data.reply,
+        text: data.message,
         sender: "ai",
         timestamp: new Date(),
       }
