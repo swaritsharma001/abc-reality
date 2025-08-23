@@ -477,7 +477,7 @@ useEffect(()=>{
                             <img
                               src={member.img}
                               alt={member.name}
-                              className="w-24 h-24 rounded-full mx-auto object-cover border-4 border-luxury/20"
+                              className="w-24 h-24 rounded-full mx-auto object-cover"
                             />
                           </div>
                           <h3 className="text-xl font-bold mb-2">{member.name}</h3>
