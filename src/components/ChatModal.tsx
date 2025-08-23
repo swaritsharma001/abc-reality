@@ -153,7 +153,7 @@ export function ChatModal({ open, onOpenChange }: ChatModalProps) {
                         : "bg-muted text-foreground border border-border"
                     }`}
                   >
-                    <ReactMarkdown>{message.reply}</ReactMarkdown>
+                    <ReactMarkdown>{message.text}</ReactMarkdown>
                   </div>
                 </div>
               </div>
