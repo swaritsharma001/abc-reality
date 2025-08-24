@@ -9,13 +9,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel"
 import { ArrowRight, Star, Users, Award, CheckCircle, Mail, Phone } from "lucide-react"
 import heroImage from "@/assets/hero-bg.jpg"
-import teamCeo from "@/assets/team-ceo.jpg"
-import teamSalesDirector from "@/assets/team-sales-director.jpg"
-import teamMarketingManager from "@/assets/team-marketing-manager.jpg"
-import teamConsultant from "@/assets/team-consultant.jpg"
 import Autoplay from "embla-carousel-autoplay"
-import cookie from "js-cookie"
 import { useNavigate } from "react-router-dom"
+
 interface PropertyData {
   id: string
   title: string
@@ -27,6 +23,9 @@ interface PropertyData {
   image: string
   type: string
   featured: boolean
+  status: string
+  sale_status: string
+  developer: string
 }
 
 interface FilterState {
@@ -34,54 +33,101 @@ interface FilterState {
   minPrice: string
   maxPrice: string
   propertyType: string
-  bedrooms: string
+  status: string
+  sale_status: string
   area: string
+  developer: string
 }
 
 const Index = () => {
   const navigate = useNavigate()
   const [featuredProperties, setFeaturedProperties] = useState<PropertyData[]>([])
   const [filteredProperties, setFilteredProperties] = useState<PropertyData[]>([])
-  const [allProperties, setAllProperties] = useState<PropertyData[]>([])
-  const [user, setUser] = useState(null)
   const [isFiltering, setIsFiltering] = useState(false)
-  const [page, pageData] = useState([])
-  const [teamMembers, setteamMembers] = useState([])
+  const [page, setPageData] = useState<any>({})
+  const [teamMembers, setTeamMembers] = useState<any[]>([])
   const [filters, setFilters] = useState<FilterState>({
     location: "",
     minPrice: "",
     maxPrice: "",
     propertyType: "",
-    bedrooms: "",
-    area: ""
+    status: "",
+    sale_status: "",
+    area: "",
+    developer: ""
   })
 
-  // Use 2 properties
-  useEffect(() =>{
-    async function d(){
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/page`)
-      const data = await res.json()
-      pageData(data)
+  // Fetch page data
+  useEffect(() => {
+    async function fetchPageData() {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/page`)
+        const data = await res.json()
+        setPageData(data)
+      } catch (error) {
+        console.error("Error fetching page data:", error)
+      }
     }
-    d()
+    fetchPageData()
   }, [])
-  async function get(id: string) {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/property/${id}`)
-    const data = await res.json()
-    return data
+
+  // Fetch team members
+  useEffect(() => {
+    async function fetchTeam() {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/team`)
+        const data = await res.json()
+        setTeamMembers(data)
+      } catch (error) {
+        console.error("Error fetching team data:", error)
+      }
+    }
+    fetchTeam()
+  }, [])
+
+  // Single property detail fetcher
+  async function getPropertyDetail(id: string) {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/property/${id}`)
+      const data = await res.json()
+      return data
+    } catch (error) {
+      console.error(`Error fetching property ${id}:`, error)
+      return null
+    }
   }
 
-  const fetchProperties = async (page: number = 1, limit: number = 5) => {
+  // Fetch properties with filters (similar to Properties component)
+  const fetchProperties = async (isFiltered = false, limit = 5) => {
+    setIsFiltering(true)
     try {
+      let query = new URLSearchParams({
+        page: "1",
+        limit: limit.toString(),
+      })
+
+      // Add filters if this is a filtered request
+      if (isFiltered) {
+        if (filters.location) query.append("location", filters.location)
+        if (filters.minPrice) query.append("minPrice", filters.minPrice)
+        if (filters.maxPrice) query.append("maxPrice", filters.maxPrice)
+        if (filters.developer) query.append("developer", filters.developer)
+        if (filters.status) query.append("status", filters.status)
+        if (filters.sale_status) query.append("sale_status", filters.sale_status)
+        if (filters.area) query.append("area", filters.area)
+      }
+
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/property/?page=${page}&limit=${limit}`
+        `${import.meta.env.VITE_API_URL}/property?${query.toString()}`
       )
+
       if (!response.ok) throw new Error("Failed to fetch properties")
 
       const apiData = await response.json()
       const properties = apiData.properties || []
 
-      const formatted = await Promise.all(
+      // Fetch detailed data for each property
+      const detailedProperties = await Promise.all(
         properties.map(async (property: any) => {
           let imageUrl = ""
           try {
@@ -91,8 +137,8 @@ const Index = () => {
             imageUrl = ""
           }
 
-          // fetch detailed property
-          const propertyData = await get(property.id)
+          // Fetch detailed property data
+          const propertyData = await getPropertyDetail(property.id)
           const detail = propertyData?.data?.pageProps?.property
 
           return {
@@ -104,102 +150,46 @@ const Index = () => {
               "Price on request"
             }`,
             location: `${detail?.area || property.area}, ${
-              detail?.country || property.country || ""
+              detail?.country || property.country || "UAE"
             }`,
-            bedrooms: detail?.unit_blocks?.[3]?.unit_bedrooms || 1,
+            developer: detail?.developer || property.developer,
+            bedrooms: detail?.unit_blocks?.[0]?.unit_bedrooms || 1,
             bathrooms: getBathroomsFromUnits(detail?.unit_blocks || []) || 1,
             area: getAreaFromUnits(detail?.unit_blocks || []) || "Size varies",
             image: imageUrl,
             type: detail?.status || property.status || "Apartment",
             featured: true,
+            status: detail?.status || property.status || "",
+            sale_status: detail?.sale_status || property.sale_status || "",
             minPriceValue: detail?.min_price || property.min_price || 0,
             areaValue: detail?.unit_blocks?.[0]?.units_area_from || 0
           }
         })
       )
 
-      return formatted
+      return detailedProperties
     } catch (error) {
       console.error("Error fetching properties:", error)
       return []
+    } finally {
+      setIsFiltering(false)
     }
   }
 
+  // Load initial featured properties
   useEffect(() => {
     const loadInitialProperties = async () => {
-      const random = Math.floor(Math.random() * 55 + 5)
-      const properties = await fetchProperties(random, 5)
+      const properties = await fetchProperties(false, 5) // No filters, 5 properties
       setFeaturedProperties(properties)
-      setAllProperties(properties)
     }
 
     loadInitialProperties()
   }, [])
 
-  // Handle filter application
-  const handleFilterSubmit = async (filterData: FilterState) => {
-    setIsFiltering(true)
-    setFilters(filterData)
-
-    try {
-      // Fetch more properties for filtering
-      const allPropsData = []
-      for (let page = 1; page <= 3; page++) {
-        const pageProperties = await fetchProperties(page, 10)
-        allPropsData.push(...pageProperties)
-      }
-
-      // Apply filters
-      let filtered = allPropsData.filter((property: any) => {
-        // Location filter
-        if (filterData.location && !property.location.toLowerCase().includes(filterData.location.toLowerCase())) {
-          return false
-        }
-
-        // Price filters
-        if (filterData.minPrice) {
-          const minPrice = parseInt(filterData.minPrice)
-          if (property.minPriceValue < minPrice) return false
-        }
-
-        if (filterData.maxPrice) {
-          const maxPrice = parseInt(filterData.maxPrice)
-          if (property.minPriceValue > maxPrice) return false
-        }
-
-        // Property type filter
-        if (filterData.propertyType) {
-          if (!property.type.toLowerCase().includes(filterData.propertyType.toLowerCase())) {
-            return false
-          }
-        }
-
-        // Bedrooms filter
-        if (filterData.bedrooms) {
-          const requiredBedrooms = parseInt(filterData.bedrooms)
-          if (filterData.bedrooms === "4") {
-            // 4+ bedrooms
-            if (property.bedrooms < 4) return false
-          } else {
-            if (property.bedrooms !== requiredBedrooms) return false
-          }
-        }
-
-        // Area filter
-        if (filterData.area) {
-          const minArea = parseInt(filterData.area)
-          if (property.areaValue && property.areaValue < minArea) return false
-        }
-
-        return true
-      })
-
-      setFilteredProperties(filtered)
-    } catch (error) {
-      console.error("Error filtering properties:", error)
-    }
-
-    setIsFiltering(false)
+  // Handle filter submission
+  const handleFilterSubmit = async () => {
+    const filteredProps = await fetchProperties(true, 10) // With filters, more properties
+    setFilteredProperties(filteredProps)
   }
 
   // Clear filters
@@ -209,33 +199,18 @@ const Index = () => {
       minPrice: "",
       maxPrice: "",
       propertyType: "",
-      bedrooms: "",
-      area: ""
+      status: "",
+      sale_status: "",
+      area: "",
+      developer: ""
     })
     setFilteredProperties([])
   }
 
-  // Helper functions to transform API data
-  const getMainImage = (data: any): string => {
-    return data.architecture?.[0]?.url || 
-           data.interior?.[0]?.url || 
-           data.lobby?.[0]?.url || 
-           '/placeholder-property.jpg'
-  }
-
-  const getBedroomsFromUnits = (units: any[]): number => {
-    if (!units?.length) return 1
-    for (const unit of units) {
-      if (unit.unit_type?.includes('1')) return 1
-      if (unit.unit_type?.includes('2')) return 2
-      if (unit.unit_type?.includes('3')) return 3
-      if (unit.unit_type?.includes('4')) return 4
-    }
-    return 1
-  }
-
+  // Helper functions
   const getBathroomsFromUnits = (units: any[]): number => {
-    const bedrooms = getBedroomsFromUnits(units)
+    if (!units?.length) return 1
+    const bedrooms = units[0]?.unit_bedrooms || 1
     return bedrooms >= 3 ? bedrooms : bedrooms + 1
   }
 
@@ -248,18 +223,6 @@ const Index = () => {
     return 'Size varies'
   }
 
-  
-
-  
-useEffect(()=>{
-  //
-  async function team(){
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/team`)
-    const data = await res.json()
-    setteamMembers(data)
-  }
-  team()
-}, [])
   // Check if any filters are active
   const hasActiveFilters = Object.values(filters).some(value => value !== "")
 
@@ -302,7 +265,6 @@ useEffect(()=>{
             <Button size="lg" onClick={() => navigate("/properties")} className="bg-gradient-to-r from-luxury to-luxury-light text-white hover:from-luxury-dark hover:to-luxury font-semibold text-lg px-8 py-6 mb-4">
               Explore Properties <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            
           </div>
         </div>
       </section>
@@ -312,7 +274,7 @@ useEffect(()=>{
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              {hasActiveFilters ? "Search" : "Featured"} <span className="bg-gradient-to-r from-luxury to-luxury-light bg-clip-text text-transparent">Properties</span>
+              {hasActiveFilters ? "Search Results" : "Featured"} <span className="bg-gradient-to-r from-luxury to-luxury-light bg-clip-text text-transparent">Properties</span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               {hasActiveFilters 
@@ -417,7 +379,7 @@ useEffect(()=>{
             <div className="grid grid-cols-2 gap-6">
               <div className="text-center p-6 bg-card rounded-lg border border-border">
                 <Star className="h-12 w-12 text-luxury mx-auto mb-4" />
-                <h3 className="text-2xl font-bold mb-2">  {page?.PropertiesSold || "500+"}    </h3>
+                <h3 className="text-2xl font-bold mb-2">{page?.PropertiesSold || "500+"}</h3>
                 <p className="text-muted-foreground">Properties Sold</p>
               </div>
               <div className="text-center p-6 bg-card rounded-lg border border-border">
@@ -477,7 +439,7 @@ useEffect(()=>{
                             <img
                               src={member.img}
                               alt={member.name}
-                              className="w-24 h-24 rounded-full mx-auto object-cover"
+                              className="w-24 h-24 rounded-full mx-auto object-cover border-4 border-luxury/20"
                             />
                           </div>
                           <h3 className="text-xl font-bold mb-2">{member.name}</h3>
