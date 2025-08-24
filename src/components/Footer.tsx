@@ -80,10 +80,10 @@ export function Footer() {
               <div className="flex items-start space-x-2 text-muted-foreground">
                 <MapPin className="h-4 w-4 text-luxury mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-foreground">Dubai business day</p>
-                  <p>1507, al manara tower</p>
-                  <p>business day</p>
-                  <p>United Arab Emirates</p>
+                  <p className="font-medium text-foreground">Dubai Business Bay</p>
+                  <p>1507, AL MANARA TOWER</p>
+                  <p>BUSINESS DAY</p>
+                  <p>UNITED ARAB EMIRATES</p>
                   
                 </div>
               </div>
@@ -93,22 +93,22 @@ export function Footer() {
               </div>
               <div className="flex items-center space-x-2 text-muted-foreground">
                 <Mail className="h-4 w-4 text-luxury" />
-                <span>  {page?.primaryEmail || "anurag@roarrealty.ae"}  </span>
+                <span>  {page?.primaryEmail || "admin@roarrealty.ae"}  </span>
               </div>
               
               {/* Google Maps Embed */}
               <div className="mt-4">
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3613.0775400945436!2d55.14098!3d25.07725!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e5f6b230a0db73b%3A0x9b2b1e3e1a7a0b1!2sDubai%20Marina%20-%20Dubai%20-%20United%20Arab%20Emirates!5e0!3m2!1sen!2s!4v1703123456789!5m2!1sen!2s"
-                  width="100%"
-                  height="250"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  className="rounded-lg border"
-                  title="Dubai business day Office Location"
-                />
+  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3613.0775400945436!2d55.14098!3d25.07725!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e5f6b230a0db73b%3A0x9b2b1e3e1a7a0b1!2sDubai%20Marina%20-%20Dubai%20-%20United%20Arab%20Emirates!5e0!3m2!1sen!2s!4v1703123456789!5m2!1sen!2s"
+  width="100%"
+  height="250"
+  style={{ border: 0 }}
+  allowFullScreen=""
+  loading="lazy"
+  referrerPolicy="no-referrer-when-downgrade"
+  className="rounded-lg border"
+  title="Dubai business bay Office Location"
+/>
               </div>
             </div>
           </div>
