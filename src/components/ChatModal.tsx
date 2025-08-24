@@ -18,11 +18,26 @@ interface Message {
   timestamp: Date
 }
 
+interface Property {
+  name: string
+  area: string
+  developer: string
+  property_type: string
+  bedrooms: number
+  bathrooms: number
+  min_price: number
+  max_price: number
+  area_sqft: number
+  status: string
+  sale_status: string
+  amenities: string[]
+}
+
 export function ChatModal({ open, onOpenChange }: ChatModalProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      text: "Hi! I'm **Sofia**, your AI assistant at Roar Realty. 🏠✨\n\nHow can I help you find your perfect luxury property in Dubai today?",
+      text: "Hi! I'm **Shora**, your AI assistant at RoreReality.ae. 🏠✨\n\nHow can I help you find your perfect luxury property in Dubai today?",
       sender: "ai",
       timestamp: new Date(),
     },
@@ -61,31 +76,44 @@ export function ChatModal({ open, onOpenChange }: ChatModalProps) {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/chat?msg=${encodeURIComponent(userMessage.text)}`)
       const data = await res.json()
 
-      const aiMessage: Message = {
-        id: Date.now().toString(),
-        text: data.message,
-        sender: "ai",
-        timestamp: new Date(),
-      }
+      if (data.success) {
+        const aiMessage: Message = {
+          id: Date.now().toString(),
+          text: data.message,
+          sender: "ai",
+          timestamp: new Date(),
+        }
 
-      setMessages((prev) => [...prev, aiMessage])
+        setMessages((prev) => [...prev, aiMessage])
 
-      // Optional: show properties as separate messages
-      if (data.properties && data.properties.length > 0) {
-        data.properties.slice(0, 5).forEach((p) => {
-          const minPrice = formatPrice(p.min_price)
-          const maxPrice = formatPrice(p.max_price)
-          
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: Date.now().toString(),
-              text: `🏡 **${p.name || 'Property'}** in ${p.area || 'Dubai'}\nDeveloper: ${p.developer || 'N/A'}\nPrice: AED ${minPrice} - AED ${maxPrice}\nStatus: ${p.status || 'Available'}`,
-              sender: "ai",
+        if (data.intent === 'property_search' && data.properties && data.properties.length > 0) {
+          const propertyCards = data.properties.slice(0, 3).map((property: Property, index: number) => {
+            const minPrice = formatPrice(property.min_price)
+            const maxPrice = formatPrice(property.max_price)
+            const amenitiesText = property.amenities && property.amenities.length > 0 
+              ? `\n🏊 **Amenities:** ${property.amenities.slice(0, 3).join(', ')}${property.amenities.length > 3 ? '...' : ''}`
+              : ''
+
+            return {
+              id: `${Date.now()}-property-${index}`,
+              text: `## 🏡 **${property.name || 'Luxury Property'}**
+
+📍 **Location:** ${property.area || 'Dubai'}
+🏗️ **Developer:** ${property.developer || 'Premium Developer'}
+🏠 **Type:** ${property.property_type || 'Luxury Property'}
+🛏️ **Bedrooms:** ${property.bedrooms || 'N/A'} | 🚿 **Bathrooms:** ${property.bathrooms || 'N/A'}
+💰 **Price:** AED ${minPrice} - AED ${maxPrice}
+📏 **Area:** ${property.area_sqft ? property.area_sqft.toLocaleString() + ' sqft' : 'N/A'}
+✅ **Status:** ${property.status || 'Available'} | 🏷️ **Sale Status:** ${property.sale_status || 'Available'}${amenitiesText}`,
+              sender: "ai" as const,
               timestamp: new Date(),
-            },
-          ])
-        })
+            }
+          })
+
+          setMessages((prev) => [...prev, ...propertyCards])
+        }
+      } else {
+        throw new Error(data.message || 'Failed to get response')
       }
     } catch (err) {
       console.error("Error fetching AI response:", err)
@@ -93,7 +121,7 @@ export function ChatModal({ open, onOpenChange }: ChatModalProps) {
         ...prev,
         {
           id: Date.now().toString(),
-          text: "⚠️ Sorry, something went wrong. Please try again.",
+          text: "⚠️ Sorry, I'm experiencing some technical difficulties. Please try again in a moment!",
           sender: "ai",
           timestamp: new Date(),
         },
@@ -119,7 +147,7 @@ export function ChatModal({ open, onOpenChange }: ChatModalProps) {
               <Bot className="h-6 w-6 text-white" />
             </div>
             <div>
-              <span className="text-xl font-semibold">Sofia</span>
+              <span className="text-xl font-semibold">Shora</span>
               <p className="text-sm text-muted-foreground font-normal">AI Real Estate Assistant</p>
             </div>
           </DialogTitle>
