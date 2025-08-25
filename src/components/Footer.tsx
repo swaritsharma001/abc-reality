@@ -1,4 +1,4 @@
-import { Instagram, MessageCircle, Mail, Phone, MapPin } from "lucide-react"
+import { Instagram, MessageCircle, Mail, Phone, MapPin, Linkedin} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import {useState, useEffect} from "react"
@@ -43,8 +43,18 @@ export function Footer() {
                 className="hover:bg-luxury/10 hover:text-luxury"
                 asChild
               >
-                <a href="https://www.instagram.com/roar.realty/" target="_blank" rel="noopener noreferrer">
+                <a href={`${page?.Instagram}`} target="_blank" rel="noopener noreferrer">
                   <Instagram className="h-4 w-4" />
+                </a>
+              </Button>
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                className="hover:bg-luxury/10 hover:text-luxury"
+                asChild
+              >
+                <a href={`${page?.LinkedIn}`} target="_blank" rel="noopener noreferrer">
+                  <Linkedin className="h-4 w-4" />
                 </a>
               </Button>
               <Button 
@@ -82,7 +92,7 @@ export function Footer() {
                 <div>
                   <p className="font-medium text-foreground">Dubai Business Bay</p>
                   <p>1507, AL MANARA TOWER</p>
-                  <p>BUSINESS DAY</p>
+                  <p>BUSINESS BAY</p>
                   <p>UNITED ARAB EMIRATES</p>
                   
                 </div>
