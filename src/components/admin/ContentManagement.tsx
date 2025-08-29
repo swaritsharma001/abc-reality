@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Image, Mail, Phone, MapPin, Save, Loader2 } from "lucide-react"
+import { Image as ImageIcon, Mail, Save, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import cookie from "js-cookie"
 import axios from "axios"
@@ -64,15 +64,15 @@ export function ContentManagement() {
           logo: response.data.HeroImage || "",
           heroTitle: response.data.HeroTitle || "",
           heroSubtitle: response.data.HeroSubtitle || "",
-          primaryEmail: response.data.primaryEmail || "anurag@roarrealty.ae",
-          supportEmail: response.data.supportEmail || "support@roarrealty.ae",
-          phone: response.data.PhoneNumber || "+971 585005438",
-          address: response.data.Address || "NO NEED TO FEEL",
+          primaryEmail: response.data.primaryEmail || "",
+          supportEmail: response.data.supportEmail || "",
+          phone: response.data.PhoneNumber || "",
+          address: response.data.Address || "",
           socialMedia: {
-            facebook: response.data.Facebook || "NO NEED TO FEEL",
-            instagram: response.data.Instagram || "https://www.instagram.com/roar.realty/",
-            twitter: response.data.Twitter || "https://www.instagram.com/roar.realty/",
-            linkedin: response.data.LinkedIn || "https://www.instagram.com/roar.realty/"
+            facebook: response.data.Facebook || "",
+            instagram: response.data.Instagram || "",
+            twitter: response.data.Twitter || "",
+            linkedin: response.data.LinkedIn || ""
           }
         })
       }
@@ -137,6 +137,28 @@ export function ContentManagement() {
     }
   }
 
+  const handleImageUpload = async (file: File) => {
+    const formData = new FormData()
+    formData.append("HeroImage", file)
+
+    try {
+      setIsSaving(true)
+      const res = await axios.post(`${backend}/page/image`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data"
+        }
+      })
+
+      setSettings((prev) => ({ ...prev, logo: res.data.HeroImage }))
+      toast({ title: "Updated", description: "Hero image uploaded successfully." })
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to upload image.", variant: "destructive" })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   // ---------- UI ----------
   if (isLoading) {
     return (
@@ -153,7 +175,7 @@ export function ContentManagement() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Image className="h-5 w-5" /> Site Identity
+            <ImageIcon className="h-5 w-5" /> Site Identity
           </CardTitle>
           <CardDescription>Update site name and hero section</CardDescription>
         </CardHeader>
@@ -171,6 +193,36 @@ export function ContentManagement() {
             {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
             Save Site
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Hero Image Upload */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ImageIcon className="h-5 w-5" /> Hero Image
+          </CardTitle>
+          <CardDescription>Upload or change your hero section image</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {settings.logo && (
+            <div className="w-full flex justify-center">
+              <img 
+                src={settings.logo} 
+                alt="Current Hero" 
+                className="max-h-40 rounded-lg border"
+              />
+            </div>
+          )}
+
+          <Input 
+            type="file" 
+            accept="image/*"
+            onChange={(e) => {
+              if (!e.target.files || e.target.files.length === 0) return
+              handleImageUpload(e.target.files[0])
+            }}
+          />
         </CardContent>
       </Card>
 
