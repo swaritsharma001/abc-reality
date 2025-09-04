@@ -230,7 +230,7 @@ const Index = () => {
   const propertiesToShow = hasActiveFilters ? filteredProperties : featuredProperties
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <Header />
 
       {/* Hero Section */}
